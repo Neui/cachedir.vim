@@ -1,0 +1,6 @@
+*	text=auto
+
+*.vim	text
+*.txt	text
+*.md	text
+LICENSE	text
