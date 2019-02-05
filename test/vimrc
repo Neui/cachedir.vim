@@ -1,0 +1,121 @@
+filetype off
+set rtp =
+"let &rtp = getcwd()
+filetype plugin indent on
+syntax enable
+set nocompatible
+
+let g:testing = 'pre-value'
+let g:cachedir_prefix = '/tmp'
+let g:cachedir_vimprefix = 'specific/'
+let g:cachedir_globalprefix = 'global/'
+
+" Use this to echo something and appear on stdout, which can then be recorded
+" and seen.
+function! Echo(s, ...)
+	silent exe "!echo " . shellescape(a:s . join(a:000, ''), "'")
+endfunction
+command! -nargs=+ Echo call Echo(<args>)
+
+" Like Echo(), but accepts a formatted string with arguments (like printf())
+function! Echof(...)
+	call Echo(call('printf', a:000))
+endfunction
+command! -nargs=+ Echof call Echof(<args>)
+
+function! Failmsg(...)
+	return a:0 > 0 ? join(a:000, '') : "Generic fail"
+endfunction
+function! Failmsgf(...)
+	return call(a:0 > 0 ? "printf" : "FailMessage", a:000)
+endfunction
+command! -nargs=* AssertFail throw "Assertion failure: " . Failmsg(<args>)
+command! -nargs=* AssertFailf throw "Assertion failure: " . Failmsgf(<args>)
+command! -nargs=* AssertSuccess qall!
+
+" Mainly for a re-throw to get a correct throwpoint
+command! AssertHelper
+			\ try |
+			\ 	call call(<args>) |
+			\ catch /^Assertion failure.*/ |
+			\ 	throw v:exception |
+			\ endtry
+
+function! AssertEval(eval, ...)
+	let l:result = eval(a:eval) " Only call it once
+	if !l:result
+		call s:doExtraStuff(a:000)
+		let g:assert_eval = a:eval
+		AssertFail string(l:result)
+	endif
+endfunction
+
+function! AssertEquals(expected, actual, ...) abort
+	if !(a:expected == a:actual)
+		let g:assert_extra = join(a:000, ' ')
+		AssertFailf "%s == %s", a:expected, a:actual
+	endif
+endfunction
+command! -nargs=+ AssertEquals AssertHelper "AssertEquals", [<args>]
+
+function! AssertNotEquals(expected, actual, ...) abort
+	if !(a:expected != a:actual)
+		let g:assert_extra = join(a:000, ' ')
+		AssertFailf "%s != %s", a:expected, a:actual
+	endif
+endfunction
+command! -nargs=+ AssertNotEquals AssertHelper "AssertNotEquals", [<args>]
+
+command! -nargs=+ Assert1 AssertNotEquals 0, <args>
+command! -nargs=+ Assert0 AssertEquals 0, <args>
+
+function! s:getSourceFrom(s)
+	let l:parsed = matchlist(a:s, '\([^,]\+\), line \(\d\+\)')
+	if empty(l:parsed) || empty(l:parsed[1]) || empty(l:parsed[2])
+				\ || stridx(l:parsed[1], 'function ') == 0
+		return '' " It's either a function or something else
+	endif
+	let l:file = l:parsed[1]
+	let l:lineno = str2nr(l:parsed[2]) " Impossible to be normally invalid
+	let l:lines = readfile(l:file, 't', l:lineno)
+	if empty(l:lines)
+		return '' " Couldn't open file
+	endif
+	return l:lines[l:lineno - 1]
+endfunction
+function! s:printSource(s)
+	try
+		let l:r = s:getSourceFrom(a:s)
+		if !empty(l:r)
+			Echo "[LINE] ", l:r
+		endif
+	catch
+		Echof "(printSource exception: %s)", v:exception
+	endtry
+endfunction
+function! Test(f) abort
+	if !filereadable(a:f)
+		Echof "Can't read file %s", a:f
+		cquit!
+	endif
+	let g:assert_extra = ""
+	try
+		execute "source" a:f
+	catch /^Assertion failure: .*/
+		Echof "Assertion failure while executing %s", a:f
+		Echof "[ASSERT] %s", strpart(v:exception, stridx(v:exception, ':') + 2)
+		if !empty(g:assert_extra)
+			Echof "[EXTRA] %s", g:assert_extra
+		endif
+		Echof "[FROM] %s", v:throwpoint
+		call s:printSource(v:throwpoint)
+		cquit!
+	catch
+		Echof "Exception caught while executing %s", a:f
+		Echof "[ERROR] %s\n[FROM] %s", v:exception, v:throwpoint
+		call s:printSource(v:throwpoint)
+		cquit!
+	endtry
+	qall!
+endfunction
+command! -nargs=1 Test call Test(<f-args>)
