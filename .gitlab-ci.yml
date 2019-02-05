@@ -1,5 +1,9 @@
 image: debian:stable
 
+test:
+    before_script: apt-get update -qq && apt-get install -y -qq vim
+    script: sh test.sh
+
 pack:
     before_script: apt-get update -qq && apt-get install -y -qq tar p7zip-full
     script: sh packs.sh
