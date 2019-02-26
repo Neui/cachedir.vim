@@ -60,17 +60,20 @@ let s:cachedir_default = {
 			\ 'name': '',
 			\ 'pre': '',
 			\ 'suf': '',
+			\ 'mkdir': 0,
 			\ }
 
 let s:cachedir_defaults = {
 			\ 'undo': {
 			\	'var': 'undodir',
-			\	'cond': 'has("persistent_undo")'
+			\	'cond': 'has("persistent_undo")',
+			\	'mkdir': 1,
 			\ },
 			\ 'swap': {
 			\	'var': '&directory',
 			\	'suf': '//',
-			\	'prepend': 1
+			\	'prepend': 1,
+			\	'mkdir': 1,
 			\ },
 			\ 'gutentags': 'g:gutentags_cache_dir',
 			\ 'ctrlspace': {'var': 'g:CtrlSpaceCacheDir', 'global': 1},
@@ -155,6 +158,10 @@ function! s:apply(cfg)
 	endif
 	
 	let l:path = a:cfg['path']
+	
+	if a:cfg['mkdir'] != 0
+		mkdir(l:path, 'p')
+	endif
 	
 	if a:cfg['prepend'] != 0
 		let l:sep = a:cfg['prepend-sep']

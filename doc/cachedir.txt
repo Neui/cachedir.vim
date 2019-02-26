@@ -179,6 +179,7 @@ more options. These are:
 	* 'prefix' (Str): Custom |g:cachedir_prefix|
 	* 'vimprefix' (Str): Custom |g:cachedir_vimprefix| or
 	  |g:cachedir_globalprefix|, depending on the global attribute
+	* 'mkdir' (0/1): Create directory before assigning
 
 Here's an copy-pasteable version for convince with default values:
 >
@@ -198,6 +199,7 @@ Here's an copy-pasteable version for convince with default values:
 		\ 'name': '',
 		\ 'pre': '',
 		\ 'suf': '',
+		\ 'mkdir': 0,
 		\ }
 
 Since your user config has the highest priority, please take out the unused
