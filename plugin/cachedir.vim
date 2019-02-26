@@ -13,33 +13,13 @@ set cpo&vim
 
 let g:cachedir_version = '1.0'
 
-if !exists("g:cachedir_config")
-	let g:cachedir_config = {}
-endif
-
-if !exists("g:cachedir_dirsep")
-	let g:cachedir_dirsep = '/'
-endif
-
-if !exists("g:cachedir_vimprefix")
-	let g:cachedir_vimprefix = 'vim-'
-endif
-
-if !exists("g:cachedir_globalprefix")
-	let g:cachedir_globalprefix = 'vim/'
-endif
-
-if !exists("g:cachedir_auto_apply")
-	let g:cachedir_auto_apply = 1
-endif
-
-if !exists("g:cachedir_init_applied")
-	let g:cachedir_init_applied = 0
-endif
-
-if !exists("g:cachedir_plugin_config")
-	let g:cachedir_plugin_config = {}
-endif
+let g:cachedir_config = get(g:, "cachedir_config", {})
+let g:cachedir_dirsep = get(g:, "cachedir_dirsep", '/')
+let g:cachedir_vimprefix = get(g:, "cachedir_vimprefix", 'vim-')
+let g:cachedir_globalprefix = get(g:, "cachedir_globalprefix", 'vim/')
+let g:cachedir_auto_apply = get(g:, "cachedir_auto_apply", 1)
+let g:cachedir_init_applied = get(g:, "cachedir_init_applied", 0)
+let g:cachedir_plugin_config = get(g:, "cachedir_plugin_config", {})
 
 function! s:get_default_prefix()
 	if has("win32") || has("win64")
