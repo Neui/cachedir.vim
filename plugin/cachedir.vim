@@ -160,7 +160,7 @@ function! s:apply(cfg)
 	let l:path = a:cfg['path']
 	
 	if a:cfg['mkdir'] != 0
-		mkdir(l:path, 'p')
+		call mkdir(l:path, 'p')
 	endif
 	
 	if a:cfg['prepend'] != 0
